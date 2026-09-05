@@ -3,217 +3,428 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
     <title>🎮 ARCADE P2P</title>
-    
-    <script src="https://jsmame.github.io/emulator.js"></script>
-    
+
     <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { background:#000; overflow:hidden; height:100vh; font-family:Arial, sans-serif; }
-        #game { width:100%; height:100vh; background:#000; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            background: #000;
+            overflow: hidden;
+            font-family: Arial, sans-serif;
+        }
+
+        #game {
+            width: 100%;
+            height: 100vh;
+            background: #000;
+        }
+
         #status-panel {
-            position:fixed; top:10px; left:50%; transform:translateX(-50%);
-            background:rgba(0,0,0,0.9); padding:12px 24px; border-radius:10px;
-            border:2px solid #4d96ff; color:white; font-size:14px; z-index:999;
-            text-align:center; min-width:300px; max-width:90%; pointer-events:none;
-            transition:all 0.3s;
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,.9);
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: 2px solid #f39c12;
+            color: white;
+            font-size: 14px;
+            z-index: 999;
+            text-align: center;
+            min-width: 300px;
+            max-width: 90%;
+            pointer-events: none;
         }
-        #status-panel .titulo { font-size:18px; font-weight:bold; margin-bottom:4px; }
-        #status-panel .detalle { font-size:13px; color:#aaa; }
-        #status-panel.ok { border-color:#2ecc71; }
-        #status-panel.error { border-color:#e74c3c; }
-        #status-panel.cargando { border-color:#f39c12; }
+
+        #status-panel .titulo {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        #status-panel .detalle {
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        #status-panel.ok {
+            border-color: #2ecc71;
+        }
+
+        #status-panel.error {
+            border-color: #e74c3c;
+        }
+
         #controles {
-            position:fixed; bottom:20px; left:0; right:0;
-            display:flex; justify-content:center; gap:12px; z-index:100;
-            padding:10px; flex-wrap:wrap; background:rgba(0,0,0,0.7);
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            z-index: 1000;
+            padding: 10px;
+            flex-wrap: wrap;
+            background: rgba(0,0,0,.7);
         }
+
         .btn {
-            padding:16px 32px; border:none; border-radius:12px; font-size:18px;
-            font-weight:bold; cursor:pointer; touch-action:manipulation;
-            min-width:80px; transition:transform 0.1s; user-select:none;
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            touch-action: manipulation;
+            min-width: 80px;
+            user-select: none;
         }
-        .btn:active { transform:scale(0.9); }
-        .btn-coin { background:#f1c40f; color:#000; }
-        .btn-start { background:#2ecc71; color:#000; }
-        .btn-quit { background:#e74c3c; color:#fff; }
-        .btn-fullscreen { background:#3498db; color:#fff; }
-        @media (max-width:500px) {
-            .btn { padding:14px 20px; font-size:15px; min-width:60px; }
-            #status-panel { font-size:12px; min-width:200px; padding:8px 16px; }
-            #status-panel .titulo { font-size:15px; }
+
+        .btn:active {
+            transform: scale(.9);
+        }
+
+        .btn-coin {
+            background: #f1c40f;
+            color: #000;
+        }
+
+        .btn-start {
+            background: #2ecc71;
+            color: #000;
+        }
+
+        .btn-quit {
+            background: #e74c3c;
+            color: #fff;
+        }
+
+        .btn-fullscreen {
+            background: #3498db;
+            color: #fff;
+        }
+
+        @media (max-width: 500px) {
+            .btn {
+                padding: 14px 20px;
+                font-size: 15px;
+                min-width: 60px;
+            }
+
+            #status-panel {
+                font-size: 12px;
+                min-width: 200px;
+                padding: 8px 16px;
+            }
+
+            #status-panel .titulo {
+                font-size: 15px;
+            }
         }
     </style>
 </head>
+
 <body>
 
-    <div id="status-panel" class="cargando">
+    <div id="status-panel">
         <div class="titulo" id="statusTitulo">⏳ Iniciando...</div>
-        <div class="detalle" id="statusDetalle">Cargando emulador...</div>
+        <div class="detalle" id="statusDetalle">
+            Cargando EmulatorJS...
+        </div>
     </div>
 
     <div id="game"></div>
 
     <div id="controles">
-        <button class="btn btn-coin" id="btnCoin">💰 Moneda</button>
-        <button class="btn btn-start" id="btnStart">▶ Start</button>
-        <button class="btn btn-fullscreen" id="btnFullscreen">⛶ Pantalla</button>
-        <button class="btn btn-quit" id="btnQuit">✕ Salir</button>
+        <button class="btn btn-coin" id="btnCoin">
+            💰 Moneda
+        </button>
+
+        <button class="btn btn-start" id="btnStart">
+            ▶ Start
+        </button>
+
+        <button class="btn btn-fullscreen" id="btnFullscreen">
+            ⛶ Pantalla
+        </button>
+
+        <button class="btn btn-quit" id="btnQuit">
+            ✕ Salir
+        </button>
     </div>
 
+
+    <!-- ========================================================= -->
+    <!-- CONFIGURACIÓN EMULATORJS                                  -->
+    <!-- ========================================================= -->
+
     <script>
-        // ============================================================
-        //  CONFIGURACIÓN - CON LA ROM QUE SÍ SUBISTE
-        // ============================================================
-        const MI_ROM = "kof96ep.zip";        // ← ESTA SÍ ESTÁ EN GITHUB
-        const MI_BIOS = "neogeo.zip";        // ← BIOS
+        const MI_ROM = "kof96ep.zip";
+        const MI_BIOS = "neogeo.zip";
         const NOMBRE_JUEGO = "KOF 96 EP";
 
-        // ============================================================
-        //  ELEMENTOS DOM
-        // ============================================================
-        const statusTitulo = document.getElementById('statusTitulo');
-        const statusDetalle = document.getElementById('statusDetalle');
-        const statusPanel = document.getElementById('status-panel');
+        /*
+         * IMPORTANTE:
+         * Estas variables deben estar definidas ANTES
+         * de cargar loader.js
+         */
 
-        function setStatus(titulo, detalle, tipo) {
+        window.EJS_player = "#game";
+
+        // Core de Neo Geo / Arcade
+        window.EJS_core = "fbneo";
+
+        // ROM
+        window.EJS_gameUrl = MI_ROM;
+
+        // BIOS
+        window.EJS_biosUrl = MI_BIOS;
+
+        // Datos de EmulatorJS
+        window.EJS_pathtodata =
+            "https://cdn.emulatorjs.org/stable/data/";
+
+        window.EJS_gameName = NOMBRE_JUEGO;
+
+        // Desactivar debug
+        window.EJS_DEBUG = false;
+    </script>
+
+
+    <!-- ========================================================= -->
+    <!-- CARGADOR OFICIAL DE EMULATORJS                            -->
+    <!-- ========================================================= -->
+
+    <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+
+
+    <!-- ========================================================= -->
+    <!-- INTERFAZ                                                  -->
+    <!-- ========================================================= -->
+
+    <script>
+
+        const statusTitulo =
+            document.getElementById("statusTitulo");
+
+        const statusDetalle =
+            document.getElementById("statusDetalle");
+
+        const statusPanel =
+            document.getElementById("status-panel");
+
+
+        function setStatus(titulo, detalle, tipo = "") {
+
             statusTitulo.textContent = titulo;
             statusDetalle.textContent = detalle;
-            statusPanel.className = tipo || 'cargando';
-            console.log(`📌 ${titulo} - ${detalle}`);
+
+            statusPanel.className = tipo;
+
+            console.log(
+                titulo + " - " + detalle
+            );
         }
 
-        // ============================================================
-        //  VERIFICAR ARCHIVOS
-        // ============================================================
-        async function verificarArchivos() {
-            setStatus('🔍 Verificando...', 'Buscando BIOS y ROM...', 'cargando');
-            
-            try {
-                // Primero verificar BIOS
-                const biosResp = await fetch(MI_BIOS, { method: 'HEAD' });
-                if (!biosResp.ok) {
-                    setStatus('❌ BIOS NO ENCONTRADA', `No encuentro "${MI_BIOS}"`, 'error');
-                    return false;
-                }
-                console.log('✅ BIOS encontrada');
-                
-                // Verificar ROM
-                const romResp = await fetch(MI_ROM, { method: 'HEAD' });
-                if (!romResp.ok) {
-                    setStatus('❌ ROM NO ENCONTRADA', `No encuentro "${MI_ROM}"`, 'error');
-                    return false;
-                }
-                console.log('✅ ROM encontrada');
-                
-                setStatus('✅ ARCHIVOS ENCONTRADOS', `Cargando ${NOMBRE_JUEGO}...`, 'ok');
-                return true;
-                
-            } catch (error) {
-                setStatus('⚠️ ERROR', '¿Usas servidor local?', 'error');
-                console.error('Error:', error);
-                return false;
+
+        /*
+         * Esperamos a que EmulatorJS cree su reproductor.
+         */
+
+        let comprobaciones = 0;
+
+        const comprobarEmulador = setInterval(() => {
+
+            comprobaciones++;
+
+            const game = document.getElementById("game");
+
+            const canvas =
+                game.querySelector("canvas");
+
+            if (canvas) {
+
+                setStatus(
+                    "🎮 ¡LISTO!",
+                    "Presiona Moneda y después Start",
+                    "ok"
+                );
+
+                clearInterval(comprobarEmulador);
+
             }
-        }
 
-        // ============================================================
-        //  CARGAR EMULADOR
-        // ============================================================
-        async function cargarEmulador() {
-            const archivosOK = await verificarArchivos();
-            if (!archivosOK) return;
+            if (comprobaciones >= 30) {
 
-            setStatus('🔄 CARGANDO', 'Descargando emulador...', 'cargando');
+                clearInterval(comprobarEmulador);
 
-            // Configurar EmulatorJS
-            window.EJS_player = "#game";
-            window.EJS_core = "fbneo";
-            window.EJS_gameUrl = MI_ROM;
-            window.EJS_biosUrl = MI_BIOS;
-            window.EJS_pathtodata = "https://cdn.emulatorjs.org/stable/data/";
-            window.EJS_gameName = NOMBRE_JUEGO;
-            window.EJS_forceISOsystem = true;
-            window.EJS_DEBUG = false;
+                if (!canvas) {
 
-            // El emulador carga automáticamente con el script de arriba
-            
-            // Monitorear carga
-            let intentos = 0;
-            const esperarCarga = setInterval(() => {
-                intentos++;
-                const gameDiv = document.getElementById('game');
-                if (gameDiv.querySelector('canvas, iframe')) {
-                    setStatus('🎮 ¡LISTO!', 'Presiona "Moneda" y luego "Start" para jugar', 'ok');
-                    clearInterval(esperarCarga);
-                } else if (intentos >= 30) {
-                    setStatus('⏳ CARGANDO...', 'El emulador puede tardar hasta 30 segundos', 'cargando');
+                    setStatus(
+                        "⚠️ No inició el juego",
+                        "Revisa la ROM y la BIOS",
+                        "error"
+                    );
+
+                    console.error(
+                        "EmulatorJS no creó el canvas."
+                    );
                 }
-            }, 1000);
+            }
 
-            // Mensaje después de 5 segundos
-            setTimeout(() => {
-                const gameDiv = document.getElementById('game');
-                if (!gameDiv.querySelector('canvas, iframe')) {
-                    setStatus('⏳ DESCARGANDO...', 'Puede tardar varios segundos', 'cargando');
-                }
-            }, 5000);
-        }
+        }, 1000);
 
-        // ============================================================
-        //  FUNCIONES DE LOS BOTONES
-        // ============================================================
+
+        // =========================================================
+        // MONEDA
+        // =========================================================
+
         function insertarMoneda() {
-            document.dispatchEvent(new KeyboardEvent('keydown', { key: '5', code: 'Digit5', bubbles: true }));
+
+            document.dispatchEvent(
+                new KeyboardEvent("keydown", {
+                    key: "5",
+                    code: "Digit5",
+                    bubbles: true
+                })
+            );
+
             setTimeout(() => {
-                document.dispatchEvent(new KeyboardEvent('keyup', { key: '5', code: 'Digit5', bubbles: true }));
+
+                document.dispatchEvent(
+                    new KeyboardEvent("keyup", {
+                        key: "5",
+                        code: "Digit5",
+                        bubbles: true
+                    })
+                );
+
             }, 100);
-            setStatus('💰 MONEDA INSERTADA', 'Presiona Start para jugar', 'ok');
-            console.log('💰 Moneda insertada');
+
+            setStatus(
+                "💰 MONEDA",
+                "Presiona Start",
+                "ok"
+            );
         }
+
+
+        // =========================================================
+        // START
+        // =========================================================
 
         function presionarStart() {
-            document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', code: 'Enter', bubbles: true }));
+
+            document.dispatchEvent(
+                new KeyboardEvent("keydown", {
+                    key: "Enter",
+                    code: "Enter",
+                    bubbles: true
+                })
+            );
+
             setTimeout(() => {
-                document.dispatchEvent(new KeyboardEvent('keyup', { key: 'Enter', code: 'Enter', bubbles: true }));
+
+                document.dispatchEvent(
+                    new KeyboardEvent("keyup", {
+                        key: "Enter",
+                        code: "Enter",
+                        bubbles: true
+                    })
+                );
+
             }, 100);
-            setStatus('▶ INICIANDO', '¡A jugar!', 'ok');
-            console.log('▶ Start presionado');
+
+            setStatus(
+                "▶ START",
+                "Iniciando partida...",
+                "ok"
+            );
         }
 
+
+        // =========================================================
+        // PANTALLA COMPLETA
+        // =========================================================
+
         function pantallaCompleta() {
-            const elem = document.getElementById('game');
+
+            const elem =
+                document.getElementById("game");
+
             if (!document.fullscreenElement) {
-                elem.requestFullscreen?.() || elem.webkitRequestFullscreen?.();
+
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                }
+
+                else if (elem.webkitRequestFullscreen) {
+                    elem.webkitRequestFullscreen();
+                }
+
             } else {
-                document.exitFullscreen?.() || document.webkitExitFullscreen?.();
+
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                }
+
+                else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                }
             }
         }
 
+
+        // =========================================================
+        // SALIR
+        // =========================================================
+
         function salirJuego() {
-            if (confirm('¿Seguro que quieres salir?')) {
+
+            if (confirm("¿Seguro que quieres salir?")) {
                 location.reload();
             }
         }
 
-        // ============================================================
-        //  ASIGNAR EVENTOS
-        // ============================================================
-        document.getElementById('btnCoin').addEventListener('click', insertarMoneda);
-        document.getElementById('btnStart').addEventListener('click', presionarStart);
-        document.getElementById('btnFullscreen').addEventListener('click', pantallaCompleta);
-        document.getElementById('btnQuit').addEventListener('click', salirJuego);
 
-        // ============================================================
-        //  INICIAR
-        // ============================================================
-        document.addEventListener('DOMContentLoaded', cargarEmulador);
+        // =========================================================
+        // EVENTOS
+        // =========================================================
 
-        console.log('🎮 ARCADE P2P');
-        console.log('📁 ROM:', MI_ROM);
-        console.log('📁 BIOS:', MI_BIOS);
-        console.log('========================================');
-        console.log('✅ Los archivos deben estar en la misma carpeta');
-        console.log('✅ Abre: https://frame-perdido.github.io/arcade-p2p/arcade-p2p/');
+        document
+            .getElementById("btnCoin")
+            .addEventListener("click", insertarMoneda);
+
+        document
+            .getElementById("btnStart")
+            .addEventListener("click", presionarStart);
+
+        document
+            .getElementById("btnFullscreen")
+            .addEventListener("click", pantallaCompleta);
+
+        document
+            .getElementById("btnQuit")
+            .addEventListener("click", salirJuego);
+
+
+        console.log("🎮 ARCADE P2P");
+        console.log("ROM:", MI_ROM);
+        console.log("BIOS:", MI_BIOS);
+        console.log("CORE: FBNeo");
+        console.log("EmulatorJS:", window.EJS_pathtodata);
+
     </script>
+
 </body>
 </html>
