@@ -1,633 +1,405 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Emuladores Clásicos</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, sans-serif;
+    background: #0f0f1a;
+    color: #e0e0e0;
+    min-height: 100vh;
+  }
+  header {
+    text-align: center;
+    padding: 1.5rem 1rem;
+    background: linear-gradient(135deg, #1a1a2e, #16213e);
+    border-bottom: 2px solid #4a4aff;
+  }
+  header h1 { font-size: 1.8rem; margin-bottom: .3rem; }
+  header p { color: #9aa; font-size: .9rem; }
 
-    <title>🎮 ARCADE P2P</title>
+  nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    padding: 1rem;
+    justify-content: center;
+    background: #15152a;
+  }
+  nav button {
+    background: #1e1e2e;
+    color: #cfcfe8;
+    border: 1px solid #2a2a3e;
+    padding: .6rem 1.1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: .9rem;
+    transition: all .2s;
+  }
+  nav button:hover { border-color: #4a4aff; }
+  nav button.active {
+    background: #4a4aff;
+    color: #fff;
+    border-color: #4a4aff;
+  }
 
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+  main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+  .panel { display: none; }
+  .panel.active { display: block; }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            background: #000;
-            overflow: hidden;
-            font-family: Arial, sans-serif;
-        }
+  .panel h2 { color: #7f9fff; margin-bottom: .8rem; }
+  .panel p.hint {
+    color: #9aa;
+    font-size: .9rem;
+    margin-bottom: 1rem;
+    line-height: 1.5;
+  }
 
-        #game {
-            width: 100%;
-            height: 100vh;
-            background: #000;
-        }
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .8rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    background: #1e1e2e;
+    padding: 1rem;
+    border-radius: 10px;
+    border: 1px solid #2a2a3e;
+  }
+  .controls label { font-size: .9rem; }
+  input[type=file] {
+    color: #cfcfe8;
+    font-size: .85rem;
+  }
+  input[type=file]::file-selector-button {
+    background: #4a4aff;
+    color: #fff;
+    border: none;
+    padding: .4rem .8rem;
+    border-radius: 6px;
+    cursor: pointer;
+    margin-right: .5rem;
+  }
+  select {
+    background: #15152a;
+    color: #cfcfe8;
+    border: 1px solid #2a2a3e;
+    padding: .4rem .6rem;
+    border-radius: 6px;
+  }
+  button.action {
+    background: #4a4aff;
+    color: #fff;
+    border: none;
+    padding: .5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: .9rem;
+  }
+  button.action:disabled {
+    background: #333;
+    cursor: not-allowed;
+    color: #777;
+  }
 
-        #status-panel {
-            position: fixed;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.9);
-            padding: 12px 24px;
-            border-radius: 10px;
-            border: 2px solid #4d96ff;
-            color: white;
-            font-size: 14px;
-            z-index: 9999;
-            text-align: center;
-            min-width: 300px;
-            max-width: 90%;
-            pointer-events: none;
-            transition: all 0.3s;
-        }
+  #screen_container, .emulator-box {
+    background: #000;
+    border: 2px solid #2a2a3e;
+    border-radius: 10px;
+    padding: 8px;
+    min-height: 400px;
+    overflow: auto;
+  }
+  #screen_container > div {
+    white-space: pre;
+    font: 14px monospace;
+    line-height: 14px;
+    color: #fff;
+  }
+  #screen_container > canvas { display: none; }
 
-        #status-panel .titulo {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 4px;
-        }
+  iframe.emu {
+    width: 100%;
+    height: 75vh;
+    border: none;
+    border-radius: 10px;
+    background: #000;
+  }
 
-        #status-panel .detalle {
-            font-size: 13px;
-            color: #aaa;
-        }
-
-        #status-panel.ok {
-            border-color: #2ecc71;
-        }
-
-        #status-panel.error {
-            border-color: #e74c3c;
-        }
-
-        #status-panel.cargando {
-            border-color: #f39c12;
-        }
-
-        #controles {
-            position: fixed;
-            bottom: 20px;
-            left: 0;
-            right: 0;
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            z-index: 10000;
-            padding: 10px;
-            flex-wrap: wrap;
-            background: rgba(0,0,0,0.7);
-        }
-
-        .btn {
-            padding: 16px 32px;
-            border: none;
-            border-radius: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            cursor: pointer;
-            touch-action: manipulation;
-            min-width: 80px;
-            transition: transform 0.1s;
-            user-select: none;
-        }
-
-        .btn:active {
-            transform: scale(0.9);
-        }
-
-        .btn-coin {
-            background: #f1c40f;
-            color: #000;
-        }
-
-        .btn-start {
-            background: #2ecc71;
-            color: #000;
-        }
-
-        .btn-quit {
-            background: #e74c3c;
-            color: #fff;
-        }
-
-        .btn-fullscreen {
-            background: #3498db;
-            color: #fff;
-        }
-
-        @media (max-width: 500px) {
-            .btn {
-                padding: 14px 20px;
-                font-size: 15px;
-                min-width: 60px;
-            }
-
-            #status-panel {
-                font-size: 12px;
-                min-width: 200px;
-                padding: 8px 16px;
-            }
-
-            #status-panel .titulo {
-                font-size: 15px;
-            }
-        }
-    </style>
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    color: #667;
+    font-size: .8rem;
+    border-top: 1px solid #2a2a3e;
+    margin-top: 2rem;
+  }
+  footer a { color: #7f9fff; }
+</style>
 </head>
-
 <body>
 
-    <div id="status-panel" class="cargando">
-        <div class="titulo" id="statusTitulo">⏳ Iniciando...</div>
-        <div class="detalle" id="statusDetalle">
-            Preparando emulador...
-        </div>
+<header>
+  <h1>🎮 Emuladores Clásicos</h1>
+  <p>Juega directamente en tu navegador — sin instalaciones</p>
+</header>
+
+<nav>
+  <button data-tab="flash" class="active">Flash (Ruffle)</button>
+  <button data-tab="retro">Consolas Retro</button>
+  <button data-tab="psx">PlayStation 1</button>
+  <button data-tab="skyemu">GB / GBA / NDS</button>
+  <button data-tab="pc">PC (v86)</button>
+  <button data-tab="j2me">J2ME</button>
+</nav>
+
+<main>
+
+  <!-- ============ FLASH / RUFFLE ============ -->
+  <section class="panel active" id="panel-flash">
+    <h2>Juegos Flash (Ruffle)</h2>
+    <p class="hint">Carga un archivo <code>.swf</code>. Todo se ejecuta localmente en tu navegador.</p>
+    <div class="controls">
+      <label>Archivo SWF: <input type="file" id="flash-file" accept=".swf"></label>
     </div>
+    <div id="flash-container" class="emulator-box"></div>
+  </section>
 
-    <div id="game"></div>
-
-    <div id="controles">
-        <button class="btn btn-coin" id="btnCoin">
-            💰 Moneda
-        </button>
-
-        <button class="btn btn-start" id="btnStart">
-            ▶ Start
-        </button>
-
-        <button class="btn btn-fullscreen" id="btnFullscreen">
-            ⛶ Pantalla
-        </button>
-
-        <button class="btn btn-quit" id="btnQuit">
-            ✕ Salir
-        </button>
+  <!-- ============ RETRO / EMULATORJS ============ -->
+  <section class="panel" id="panel-retro">
+    <h2>Consolas Retro (EmulatorJS)</h2>
+    <p class="hint">Selecciona la consola y carga tu ROM. Soporta NES, SNES, Genesis, GBA, N64, Arcade y más.</p>
+    <div class="controls">
+      <label>Consola:
+        <select id="retro-core">
+          <option value="nes">NES</option>
+          <option value="snes">SNES</option>
+          <option value="segaMD">Sega Genesis / Mega Drive</option>
+          <option value="gba">Game Boy Advance</option>
+          <option value="gb">Game Boy</option>
+          <option value="n64">Nintendo 64</option>
+          <option value="arcade">Arcade</option>
+          <option value="psx" disabled>PS1 (usa la pestaña PSX)</option>
+        </select>
+      </label>
+      <label>ROM: <input type="file" id="retro-file"></label>
     </div>
-
-
-    <script>
-
-        // ============================================================
-        // CONFIGURACIÓN
-        // ============================================================
-
-        const MI_ROM = "./kof96ep.zip";
-        const MI_BIOS = "./neogeo.zip";
-        const NOMBRE_JUEGO = "KOF 96 EP";
-
-
-        // ============================================================
-        // ELEMENTOS
-        // ============================================================
-
-        const statusTitulo =
-            document.getElementById("statusTitulo");
-
-        const statusDetalle =
-            document.getElementById("statusDetalle");
-
-        const statusPanel =
-            document.getElementById("status-panel");
-
-
-        function setStatus(titulo, detalle, tipo = "cargando") {
-
-            statusTitulo.textContent = titulo;
-            statusDetalle.textContent = detalle;
-            statusPanel.className = tipo;
-
-            console.log("📌", titulo, "-", detalle);
-        }
-
-
-        // ============================================================
-        // VERIFICAR ROM Y BIOS
-        // ============================================================
-
-        async function verificarArchivo(nombre, tipo) {
-
-            try {
-
-                const respuesta = await fetch(nombre, {
-                    method: "HEAD",
-                    cache: "no-store"
-                });
-
-                if (!respuesta.ok) {
-
-                    console.error(
-                        "❌ No encontrado:",
-                        nombre,
-                        respuesta.status
-                    );
-
-                    setStatus(
-                        "❌ " + tipo + " NO ENCONTRADA",
-                        'No encuentro "' + nombre + '"',
-                        "error"
-                    );
-
-                    return false;
-                }
-
-                console.log(
-                    "✅ Encontrado:",
-                    nombre
-                );
-
-                return true;
-
-            } catch (error) {
-
-                console.error(
-                    "❌ Error verificando:",
-                    nombre,
-                    error
-                );
-
-                setStatus(
-                    "⚠️ ERROR",
-                    "No se pudo comprobar " + nombre,
-                    "error"
-                );
-
-                return false;
-            }
-        }
-
-
-        async function verificarArchivos() {
-
-            setStatus(
-                "🔍 VERIFICANDO",
-                "Buscando ROM y BIOS...",
-                "cargando"
-            );
-
-
-            // Primero BIOS
-
-            const biosOK =
-                await verificarArchivo(
-                    MI_BIOS,
-                    "BIOS"
-                );
-
-            if (!biosOK) {
-                return false;
-            }
-
-
-            // Después ROM
-
-            const romOK =
-                await verificarArchivo(
-                    MI_ROM,
-                    "ROM"
-                );
-
-            if (!romOK) {
-                return false;
-            }
-
-
-            setStatus(
-                "✅ ARCHIVOS ENCONTRADOS",
-                NOMBRE_JUEGO + " — iniciando...",
-                "ok"
-            );
-
-            return true;
-        }
-
-
-        // ============================================================
-        // CONFIGURAR EMULATORJS
-        // ============================================================
-
-        function configurarEmulador() {
-
-            /*
-             * IMPORTANTE:
-             * EmulatorJS debe recibir estas variables
-             * ANTES de cargar loader.js.
-             */
-
-            window.EJS_player = "#game";
-
-            // Core FBNeo
-            window.EJS_core = "fbneo";
-
-            // ROM
-            window.EJS_gameUrl = MI_ROM;
-
-            // BIOS Neo Geo
-            window.EJS_biosUrl = MI_BIOS;
-
-            // Datos de EmulatorJS
-            window.EJS_pathtodata =
-                "https://cdn.emulatorjs.org/stable/data/";
-
-            window.EJS_gameName =
-                NOMBRE_JUEGO;
-
-            window.EJS_DEBUG = false;
-
-            console.log("🎮 EmulatorJS configurado");
-            console.log("📁 ROM:", MI_ROM);
-            console.log("📁 BIOS:", MI_BIOS);
-            console.log("🎯 CORE:", window.EJS_core);
-        }
-
-
-        // ============================================================
-        // CARGAR EMULATORJS
-        // ============================================================
-
-        function cargarLoader() {
-
-            return new Promise((resolve, reject) => {
-
-                setStatus(
-                    "🔄 CARGANDO",
-                    "Descargando EmulatorJS...",
-                    "cargando"
-                );
-
-
-                const script =
-                    document.createElement("script");
-
-                script.src =
-                    "https://cdn.emulatorjs.org/stable/data/loader.js";
-
-                script.onload = () => {
-
-                    console.log(
-                        "✅ EmulatorJS loader cargado"
-                    );
-
-                    resolve();
-
-                };
-
-                script.onerror = () => {
-
-                    console.error(
-                        "❌ No se pudo cargar loader.js"
-                    );
-
-                    setStatus(
-                        "❌ ERROR DEL EMULADOR",
-                        "No se pudo cargar EmulatorJS",
-                        "error"
-                    );
-
-                    reject(
-                        new Error(
-                            "No se pudo cargar EmulatorJS"
-                        )
-                    );
-                };
-
-
-                document.head.appendChild(script);
-            });
-        }
-
-
-        // ============================================================
-        // INICIAR
-        // ============================================================
-
-        async function iniciar() {
-
-            try {
-
-                const archivosOK =
-                    await verificarArchivos();
-
-                if (!archivosOK) {
-                    return;
-                }
-
-
-                configurarEmulador();
-
-                await cargarLoader();
-
-
-                setStatus(
-                    "🎮 INICIANDO",
-                    "Cargando " + NOMBRE_JUEGO + "...",
-                    "cargando"
-                );
-
-
-            } catch (error) {
-
-                console.error(
-                    "❌ Error:",
-                    error
-                );
-
-                setStatus(
-                    "❌ ERROR",
-                    "No se pudo iniciar el emulador",
-                    "error"
-                );
-            }
-        }
-
-
-        // ============================================================
-        // MONEDA
-        // ============================================================
-
-        function insertarMoneda() {
-
-            console.log("💰 Moneda");
-
-            document.dispatchEvent(
-                new KeyboardEvent("keydown", {
-                    key: "5",
-                    code: "Digit5",
-                    bubbles: true
-                })
-            );
-
-            setTimeout(() => {
-
-                document.dispatchEvent(
-                    new KeyboardEvent("keyup", {
-                        key: "5",
-                        code: "Digit5",
-                        bubbles: true
-                    })
-                );
-
-            }, 100);
-
-
-            setStatus(
-                "💰 MONEDA INSERTADA",
-                "Presiona Start para jugar",
-                "ok"
-            );
-        }
-
-
-        // ============================================================
-        // START
-        // ============================================================
-
-        function presionarStart() {
-
-            console.log("▶ Start");
-
-            document.dispatchEvent(
-                new KeyboardEvent("keydown", {
-                    key: "Enter",
-                    code: "Enter",
-                    bubbles: true
-                })
-            );
-
-            setTimeout(() => {
-
-                document.dispatchEvent(
-                    new KeyboardEvent("keyup", {
-                        key: "Enter",
-                        code: "Enter",
-                        bubbles: true
-                    })
-                );
-
-            }, 100);
-
-
-            setStatus(
-                "▶ START",
-                "Iniciando partida...",
-                "ok"
-            );
-        }
-
-
-        // ============================================================
-        // PANTALLA COMPLETA
-        // ============================================================
-
-        function pantallaCompleta() {
-
-            const elem =
-                document.getElementById("game");
-
-            if (!document.fullscreenElement) {
-
-                if (elem.requestFullscreen) {
-
-                    elem.requestFullscreen();
-
-                } else if (elem.webkitRequestFullscreen) {
-
-                    elem.webkitRequestFullscreen();
-                }
-
-            } else {
-
-                if (document.exitFullscreen) {
-
-                    document.exitFullscreen();
-
-                } else if (document.webkitExitFullscreen) {
-
-                    document.webkitExitFullscreen();
-                }
-            }
-        }
-
-
-        // ============================================================
-        // SALIR
-        // ============================================================
-
-        function salirJuego() {
-
-            if (
-                confirm(
-                    "¿Seguro que quieres salir?"
-                )
-            ) {
-                location.reload();
-            }
-        }
-
-
-        // ============================================================
-        // EVENTOS
-        // ============================================================
-
-        document
-            .getElementById("btnCoin")
-            .addEventListener(
-                "click",
-                insertarMoneda
-            );
-
-        document
-            .getElementById("btnStart")
-            .addEventListener(
-                "click",
-                presionarStart
-            );
-
-        document
-            .getElementById("btnFullscreen")
-            .addEventListener(
-                "click",
-                pantallaCompleta
-            );
-
-        document
-            .getElementById("btnQuit")
-            .addEventListener(
-                "click",
-                salirJuego
-            );
-
-
-        // ============================================================
-        // INICIO
-        // ============================================================
-
-        if (
-            document.readyState === "loading"
-        ) {
-
-            document.addEventListener(
-                "DOMContentLoaded",
-                iniciar
-            );
-
-        } else {
-
-            iniciar();
-        }
-
-
-        console.log("==============================");
-        console.log("🎮 ARCADE P2P");
-        console.log("📁 ROM:", MI_ROM);
-        console.log("📁 BIOS:", MI_BIOS);
-        console.log("==============================");
-
-    </script>
+    <div id="retro-game" class="emulator-box"></div>
+  </section>
+
+  <!-- ============ PSX ============ -->
+  <section class="panel" id="panel-psx">
+    <h2>PlayStation 1</h2>
+    <p class="hint">
+      ⚠️ Necesitas tu propio BIOS de PS1 (ej. <code>scph5501.bin</code>).
+      Para juegos multi-pista, selecciona el <code>.cue</code> y todos sus <code>.bin</code> a la vez.
+    </p>
+    <div class="controls">
+      <label>BIOS: <input type="file" id="psx-bios" accept=".bin"></label>
+      <label>Juego: <input type="file" id="psx-rom" multiple accept=".bin,.cue,.iso,.img,.chd,.pbp,.zip"></label>
+      <button class="action" id="psx-load" disabled>Cargar juego</button>
+    </div>
+    <div id="psx-game" class="emulator-box"></div>
+  </section>
+
+  <!-- ============ SKYEMU ============ -->
+  <section class="panel" id="panel-skyemu">
+    <h2>Game Boy / GBC / GBA / NDS (SkyEmu)</h2>
+    <p class="hint">SkyEmu se abre como app web. Carga tus ROMs directamente allí.</p>
+    <iframe class="emu" src="https://web.skyemu.app/" allow="gamepad; fullscreen"></iframe>
+  </section>
+
+  <!-- ============ PC / V86 ============ -->
+  <section class="panel" id="panel-pc">
+    <h2>PC x86 (v86)</h2>
+    <p class="hint">Carga una imagen de disco (.iso o .img). Ej: FreeDOS, Windows 95, Linux. Todo corre localmente.</p>
+    <div class="controls">
+      <label>Disco: <input type="file" id="pc-disk"></label>
+    </div>
+    <div id="screen_container">
+      <div></div>
+      <canvas></canvas>
+    </div>
+  </section>
+
+  <!-- ============ J2ME ============ -->
+  <section class="panel" id="panel-j2me">
+    <h2>J2ME (Juegos de celular)</h2>
+    <p class="hint">
+      J2ME Player usa CheerpJ, que requiere soporte del header <code>Range</code>.
+      GitHub Pages no lo soporta, así que se abre la instancia pública como iframe.
+    </p>
+    <iframe class="emu" src="https://j2me-player.netlify.app/" allow="fullscreen; gamepad"></iframe>
+  </section>
+
+</main>
+
+<footer>
+  Basado en <a href="https://github.com/ruffle-rs/ruffle" target="_blank">Ruffle</a>,
+  <a href="https://github.com/EmulatorJS/EmulatorJS" target="_blank">EmulatorJS</a>,
+  <a href="https://github.com/copy/v86" target="_blank">v86</a>,
+  <a href="https://github.com/skylersaleh/SkyEmu" target="_blank">SkyEmu</a>,
+  <a href="https://github.com/iqbaladinur/j2me-player" target="_blank">J2ME Player</a>.
+  <br>No se incluyen ROMs ni BIOS. Usa solo archivos que poseas legalmente.
+</footer>
+
+<!-- ============ LIBRERÍAS ============ -->
+<script src="https://unpkg.com/@ruffle-rs/ruffle"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/v86@latest/build/libv86.js"></script>
+
+<script>
+/* =========================================================
+   NAVEGACIÓN POR PESTAÑAS
+   ========================================================= */
+const tabButtons = document.querySelectorAll('nav button');
+tabButtons.forEach(btn => {
+  btn.addEventListener('click', () => {
+    tabButtons.forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+/* =========================================================
+   1. RUFFLE (Flash)
+   ========================================================= */
+let rufflePlayer = null;
+window.addEventListener('load', () => {
+  if (window.RufflePlayer) {
+    window.RufflePlayer.config = {
+      autoplay: 'on',
+      unmuteOverlay: 'hidden',
+      letterbox: 'on',
+    };
+    const ruffle = window.RufflePlayer.newest();
+    rufflePlayer = ruffle.createPlayer();
+    rufflePlayer.style.width = '100%';
+    rufflePlayer.style.height = '500px';
+    document.getElementById('flash-container').appendChild(rufflePlayer);
+  }
+});
+
+document.getElementById('flash-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file && rufflePlayer) {
+    rufflePlayer.load(URL.createObjectURL(file));
+  }
+});
+
+/* =========================================================
+   2. EMULATORJS (Retro)  — helper compartido
+   ========================================================= */
+function launchEmulatorJS({ containerId, core, gameUrl, biosUrl, gameName }) {
+  const container = document.getElementById(containerId);
+  container.innerHTML = '';
+  // Eliminar loaders anteriores
+  document.querySelectorAll('script[data-ejs-loader]').forEach(s => s.remove());
+
+  window.EJS_player = '#' + containerId;
+  window.EJS_core = core;
+  window.EJS_gameUrl = gameUrl;
+  window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+  window.EJS_gameName = gameName || 'juego';
+  window.EJS_startOnLoaded = true;
+  window.EJS_color = '#4a4aff';
+  if (biosUrl) window.EJS_biosUrl = biosUrl;
+  else delete window.EJS_biosUrl;
+
+  const script = document.createElement('script');
+  script.src = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+  script.dataset.ejsLoader = 'true';
+  document.body.appendChild(script);
+}
+
+document.getElementById('retro-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  launchEmulatorJS({
+    containerId: 'retro-game',
+    core: document.getElementById('retro-core').value,
+    gameUrl: URL.createObjectURL(file),
+    gameName: file.name
+  });
+});
+
+/* =========================================================
+   3. PSX (EmulatorJS + mednafen_psx_hw + BIOS + multi-track)
+   ========================================================= */
+let psxBiosUrl = null;
+const psxBiosInput = document.getElementById('psx-bios');
+const psxRomInput = document.getElementById('psx-rom');
+const psxLoadBtn = document.getElementById('psx-load');
+
+psxBiosInput.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (file) {
+    psxBiosUrl = URL.createObjectURL(file);
+    psxCheckReady();
+  }
+});
+psxRomInput.addEventListener('change', psxCheckReady);
+
+function psxCheckReady() {
+  psxLoadBtn.disabled = !(psxBiosUrl && psxRomInput.files.length > 0);
+}
+
+psxLoadBtn.addEventListener('click', async () => {
+  const files = Array.from(psxRomInput.files);
+  let gameUrl;
+
+  if (files.length > 1) {
+    // Empaquetar multi-track (.cue + .bin) en un zip en memoria
+    const zip = new JSZip();
+    files.forEach(f => zip.file(f.name, f));
+    const blob = await zip.generateAsync({ type: 'blob' });
+    gameUrl = URL.createObjectURL(blob);
+  } else {
+    gameUrl = URL.createObjectURL(files[0]);
+  }
+
+  launchEmulatorJS({
+    containerId: 'psx-game',
+    core: 'mednafen_psx_hw',
+    gameUrl: gameUrl,
+    biosUrl: psxBiosUrl,
+    gameName: files[0].name
+  });
+});
+
+/* =========================================================
+   4. V86 (PC x86)
+   ========================================================= */
+document.getElementById('pc-disk').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const container = document.getElementById('screen_container');
+  // Reiniciar pantalla
+  container.querySelector('div').innerHTML = '';
+  const canvas = container.querySelector('canvas');
+  canvas.style.display = 'none';
+
+  new V86({
+    wasm_path: 'https://cdn.jsdelivr.net/npm/v86@latest/build/v86.wasm',
+    memory_size: 256 * 1024 * 1024,
+    vga_memory_size: 8 * 1024 * 1024,
+    screen_container: container,
+    bios:     { url: 'https://cdn.jsdelivr.net/npm/v86@latest/bios/seabios.bin' },
+    vga_bios: { url: 'https://cdn.jsdelivr.net/npm/v86@latest/bios/vgabios.bin' },
+    cdrom:    { buffer: await file.arrayBuffer() },
+    autostart: true
+  });
+});
+</script>
 
 </body>
 </html>
